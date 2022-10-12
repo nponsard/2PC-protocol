@@ -13,14 +13,22 @@ export default function startNode(
   router.post("/query", async (ctx) => {
     const operation = await ctx.request.body({ type: "json" }).value;
 
-    console.log("Received operation ", operation.id);
+    console.log("Prepare query ", operation.id);
 
     RunningOperations[operation.id] = operation;
+
+    const valid = Math.random() > 0.5;
+
+    console.log(
+      `Simulating a ${valid ? "valid" : "invalid"} operation for ${
+        operation.id
+      }`
+    );
 
     // send response to coordinator
 
     ctx.response.body = {
-      valid: false,
+      valid,
     };
   });
 
@@ -29,13 +37,16 @@ export default function startNode(
 
     const operation = RunningOperations[id];
 
-    if (!operation) return
-
+    if (!operation) return;
 
     if (commit) {
       console.log("Commiting operation " + id);
 
-      await Deno.writeTextFile("log-"+port, operation.query);
+      await Deno.writeTextFile(
+        "log-" + port,
+        `${operation.id} ${operation.query}\n`,
+        { append: true }
+      );
     } else {
       console.log("Rolling back operation " + id);
     }

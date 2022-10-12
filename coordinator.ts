@@ -40,22 +40,16 @@ function commitNode(node: string, id: string) {
   });
 }
 
-function failOperation(id: string) {
-  // send rollback to all nodes
-
-  nodes.forEach((node) => {
-    rollbackNode(node, id);
-  });
-
-  // remove operation from coordinatorOperations
-}
-
-function successOperation(id: string) {
+function endOperation(id: string) {
   // check if all nodes have reported success
 
   const operation = coordinatorOperations[id];
 
-  if (operation && operation.nodesSuccess.length === nodes.size) {
+  if (!operation) return;
+
+  // success
+
+  if (operation.nodesSuccess.length === nodes.size) {
     // send commit to all nodes
 
     nodes.forEach((node) => {
@@ -64,6 +58,20 @@ function successOperation(id: string) {
     // remove operation from coordinatorOperations
 
     coordinatorOperations[id] = null;
+    return;
+  }
+
+  // if one failed
+
+  if (
+    operation.nodesFailed.length + operation.nodesSuccess.length ===
+    nodes.size
+  ) {
+    nodes.forEach((node) => {
+      rollbackNode(node, id);
+    });
+    coordinatorOperations[id] = null;
+    return;
   }
 }
 
@@ -107,7 +115,6 @@ export default function startCoordinator(router: Router) {
           if (!body.valid) throw new Error("Operation failed on node ");
           operationStatus.nodesSuccess.push(node);
           coordinatorOperations[operation.id] = operationStatus;
-          successOperation(operation.id);
         })
         .catch((e) => {
           console.log("Error on node " + node + " " + e);
@@ -119,7 +126,9 @@ export default function startCoordinator(router: Router) {
 
           operationStatus.nodesFailed.push(node);
           coordinatorOperations[operation.id] = operationStatus;
-          failOperation(operation.id);
+        })
+        .finally(() => {
+          endOperation(operation.id);
         });
     });
   });
