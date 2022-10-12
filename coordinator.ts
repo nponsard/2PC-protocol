@@ -19,7 +19,7 @@ const coordinatorOperations: Record<string, CoordinatorOperation | null> = {};
 const nodes: Set<string> = new Set();
 
 function rollbackNode(node: string, id: string) {
-  console.log("Sending rollback to node", node, id);
+  console.log("ABORT", node, id);
   return fetch(`http://${node}/finalize`, {
     method: "POST",
     body: JSON.stringify({
@@ -29,7 +29,7 @@ function rollbackNode(node: string, id: string) {
   });
 }
 function commitNode(node: string, id: string) {
-  console.log("Sending commit to node", node, id);
+  console.log("COMMIT", node, id);
 
   return fetch(`http://${node}/finalize`, {
     method: "POST",
@@ -52,6 +52,8 @@ function endOperation(id: string) {
   if (operation.nodesSuccess.length === nodes.size) {
     // send commit to all nodes
 
+    console.log("GLOBAL-COMMIT " + id);
+
     nodes.forEach((node) => {
       commitNode(node, id);
     });
@@ -67,6 +69,7 @@ function endOperation(id: string) {
     operation.nodesFailed.length + operation.nodesSuccess.length ===
     nodes.size
   ) {
+    console.log("GLOBAL-ABORT", id);
     nodes.forEach((node) => {
       rollbackNode(node, id);
     });
@@ -95,7 +98,7 @@ export default function startCoordinator(router: Router) {
     coordinatorOperations[operation.id] = operation;
 
     nodes.forEach((node) => {
-      console.log(`Sending to ${node}`);
+      console.log(`PREPARE ${node}`);
 
       fetch(`http://${node}/query`, {
         method: "POST",

@@ -13,17 +13,13 @@ export default function startNode(
   router.post("/query", async (ctx) => {
     const operation = await ctx.request.body({ type: "json" }).value;
 
-    console.log("Prepare query ", operation.id);
+    console.log("PREPARE", operation.id);
 
     RunningOperations[operation.id] = operation;
 
     const valid = Math.random() > 0.5;
 
-    console.log(
-      `Simulating a ${valid ? "valid" : "invalid"} operation for ${
-        operation.id
-      }`
-    );
+    console.log(`${valid ? "VOTE-COMMIT" : "VOTE-ABORT"} ${operation.id}`);
 
     // send response to coordinator
 
@@ -52,6 +48,8 @@ export default function startNode(
     }
 
     RunningOperations[id] = null;
+
+    console.log("ACK " + id);
   });
 
   fetch(`http://${coordinator}/register`, {
