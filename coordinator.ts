@@ -1,4 +1,5 @@
 import { Router } from "https://deno.land/x/oak@v11.1.0/router.ts";
+import { Operation } from "./operation.ts";
 
 enum Status {
   PENDING = "PENDING",
@@ -7,13 +8,7 @@ enum Status {
   ERROR = "ERROR",
 }
 
-interface Oeration {
-  id: string;
-  name: string;
-  query: string;
-}
-
-type CoordinatorOperation = Oeration & {
+type CoordinatorOperation = Operation & {
   status: Status;
   nodesSuccess: string[];
   nodesFailed: string[];

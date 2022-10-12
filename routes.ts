@@ -1,4 +1,4 @@
-import { parse } from "https://deno.land/std/flags/mod.ts";
+import { parse } from "https://deno.land/std@0.159.0/flags/mod.ts";
 import { Router } from "https://deno.land/x/oak@v11.1.0/router.ts";
 import startCoordinator from "./coordinator.ts";
 import startNode from "./node.ts";
